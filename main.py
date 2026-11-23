@@ -17,16 +17,24 @@ def main() -> int:
     if not joke:
         print("joke.txt is empty", file=sys.stderr)
         return 1
+    if "\n" in joke or "\r" in joke:
+        print("joke must be a single line (no embedded newlines)",
+              file=sys.stderr)
+        return 1
     if len(joke) > 200:
         print(f"joke is {len(joke)} characters, over the 200 limit",
               file=sys.stderr)
         return 1
 
-    out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR") or "/output"
-    os.makedirs(out_dir, exist_ok=True)
+    out_dir = (os.environ.get("MAKEFUN_OUTPUT_DIR") or "").strip() or "/output"
     out_path = os.path.join(out_dir, "entry.txt")
-    with open(out_path, "w", encoding="utf-8", newline="") as f:
-        f.write(joke)
+    try:
+        os.makedirs(out_dir, exist_ok=True)
+        with open(out_path, "w", encoding="utf-8", newline="") as f:
+            f.write(joke)
+    except OSError as exc:
+        print(f"cannot write {out_path}: {exc}", file=sys.stderr)
+        return 1
     print(f"wrote {len(joke)} characters to {out_path}")
     return 0
 
